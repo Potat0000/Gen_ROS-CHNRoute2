@@ -1,0 +1,51 @@
+name: Gen ROS CHNRoute2
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "3 * * * *"
+  repository_dispatch:
+  workflow_dispatch:
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          repository: "misakaio/chnroutes2"
+          fetch-depth: 2
+      - name: Get old and new chnroutes file
+        run: |
+          sed '/^#/d;s,\(.*\)/32$,\1,' chnroutes.txt > ../new
+          git reset --hard HEAD^1
+          sed '/^#/d;s,\(.*\)/32$,\1,' chnroutes.txt > old
+          mv ../new .
+      - name: Generate chnroute2.rsc
+        run: |
+          echo '/ip/firewall/address-list' > chnroute2.rsc
+          echo 'do { remove [find list=chnroute2] } on-error={}' >> chnroute2.rsc
+          sed 's/\(.*\)/do { add list=chnroute2 address=\1 } on-error={}/' new >> chnroute2.rsc
+      - name: Generate chnroute2.diff.rsc
+        run: |
+          echo '/ip/firewall/address-list' > chnroute2.diff.rsc
+          diff --old-line-format="do { remove [find list=chnroute2 address=%l] } on-error={}%c'\12'" \
+              --unchanged-line-format="" --new-line-format="do { add list=chnroute2 address=%l } on-error={}%c'\12'" \
+              old new >> chnroute2.diff.rsc
+      - name: Deploy chnroute2.rsc
+        uses: exuanbo/actions-deploy-gist@v1
+        with:
+          token: ${{ secrets.TOKEN }}
+          gist_id: 77d5f22f8d1228d4967448f6558dd0a3
+          file_path: chnroute2.rsc
+      - name: Deploy chnroute2.diff.rsc
+        uses: exuanbo/actions-deploy-gist@v1
+        with:
+          token: ${{ secrets.TOKEN }}
+          gist_id: 77d5f22f8d1228d4967448f6558dd0a3
+          file_path: chnroute2.diff.rsc
