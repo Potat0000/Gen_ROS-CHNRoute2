@@ -28,14 +28,15 @@ jobs:
           mv ../new .
       - name: Generate chnroute2.rsc
         run: |
-          echo '/ip/firewall/address-list' > chnroute2.rsc
-          echo 'do { remove [find list=chnroute2] } on-error={}' >> chnroute2.rsc
-          sed 's/\(.*\)/do { add list=chnroute2 address=\1 } on-error={}/' new >> chnroute2.rsc
+          echo "# $(date -R)" > chnroute2.rsc
+          echo 'do { /ip/firewall/address-list/remove [find list=chnroute2] } on-error={}' >> chnroute2.rsc
+          sed 's,\(.*\),do { /ip/firewall/address-list/add list=chnroute2 address=\1 } on-error={},' new >> chnroute2.rsc
       - name: Generate chnroute2.diff.rsc
         run: |
-          echo '/ip/firewall/address-list' > chnroute2.diff.rsc
-          diff --old-line-format="do { remove [find list=chnroute2 address=%l] } on-error={}%c'\12'" \
-              --unchanged-line-format="" --new-line-format="do { add list=chnroute2 address=%l } on-error={}%c'\12'" \
+          echo "# $(date -R)" > chnroute2.diff.rsc
+          diff --old-line-format="do { /ip/firewall/address-list/remove [find list=chnroute2 address=%l] } on-error={}%c'\12'" \
+              --unchanged-line-format="" \
+              --new-line-format="do { /ip/firewall/address-list/add list=chnroute2 address=%l } on-error={}%c'\12'" \
               old new >> chnroute2.diff.rsc
       - name: Deploy chnroute2.rsc
         uses: exuanbo/actions-deploy-gist@v1
