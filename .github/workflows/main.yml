@@ -35,9 +35,9 @@ jobs:
         run: |
           echo "# $(date -R)" > chnroute2.diff.rsc
           diff --old-line-format="do { /ip/firewall/address-list/remove [find list=chnroute2 address=%l] } on-error={}%c'\12'" \
-              --unchanged-line-format="" \
-              --new-line-format="do { /ip/firewall/address-list/add list=chnroute2 address=%l } on-error={}%c'\12'" \
-              old new >> chnroute2.diff.rsc
+               --unchanged-line-format="" \
+               --new-line-format="do { /ip/firewall/address-list/add list=chnroute2 address=%l } on-error={}%c'\12'" \
+               old new >> chnroute2.diff.rsc || true
       - name: Deploy chnroute2.rsc
         uses: exuanbo/actions-deploy-gist@v1
         with:
